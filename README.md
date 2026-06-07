@@ -112,6 +112,119 @@ Key design decisions:
   this lets you route different hosts differently. DeepSeek goes direct (fast),
   OpenAI goes through proxy (unblocked).
 
+## WSL AI Agents & the GFW Problem
+
+If you use AI coding agents in WSL2 (Hermes, Claude Code, Codex, OpenHands,
+etc.), you have probably hit this:
+
+```
+🔁 Transient APIConnectionError — Connection error
+❌ API failed after 3 retries
+```
+
+### Why this happens
+
+The AI ecosystem's API landscape splits into two categories from China:
+
+| Category | APIs | GFW Status |
+|----------|------|------------|
+| **Blocked** | `api.openai.com`, `api.anthropic.com`, `apihub.agnes-ai.com`, `api.groq.com` | ❌ Direct connection fails (TCP RST / timeout) |
+| **Accessible** | `api.deepseek.com`, `api.moonshot.cn`, `dashscope.aliyuncs.com` | ✅ Works from within China |
+
+Most AI agents connect to multiple providers. Claude Code talks to Anthropic.
+Hermes talks to DeepSeek **and** Agnes. Codex talks to OpenAI. When your agent
+switches models mid-session, it needs to route some requests through a proxy and
+others directly — all within the same process.
+
+### The standard approaches and their limits
+
+#### Approach 1: Set `https_proxy` globally
+
+```bash
+# ~/.bashrc
+export https_proxy=http://127.0.0.1:7890
+```
+
+**Problem:** Everything goes through the proxy — even `api.deepseek.com`.
+DeepSeek V3 responds in <2s from China without a proxy, but through one it's
+slower and less reliable. Plus, if the proxy is down, **nothing** works.
+
+#### Approach 2: WSL2 `autoProxy=true`
+
+```ini
+# .wslconfig
+[experimental]
+autoProxy=true
+networkingMode=mirrored
+```
+
+**Problem:** Requires Windows 11 22H2+. Requires your proxy to listen on
+`0.0.0.0` (Allow LAN). ChromeGo and some Clash configs default to
+`allow-lan: false` for security. Also, you can't control **which** hosts go
+through the proxy — it copies Windows' system proxy setting, which is
+all-or-nothing.
+
+#### Approach 3: `wsl-proxy-launcher` (this tool)
+
+```bash
+wsl-proxy --no-proxy "api.deepseek.com,api.moonshot.cn" -- hermes
+```
+
+**How it solves the problem:**
+
+```
+                   ┌──────────────────────────────┐
+                   │       Hermes / Claude Code    │
+                   │    (running in WSL2 process)  │
+                   └──────────┬───────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+        api.deepseek.com  api.anthropic.com  apihub.agnes-ai.com
+              │               │               │
+        no_proxy skips   https_proxy      https_proxy
+        → DIRECT (fast)  → 127.0.0.1:7890 → 127.0.0.1:7890
+                         → Windows proxy  → Windows proxy
+                         → Internet       → Internet ✅
+```
+
+Each request takes the optimal path:
+- **China APIs** → Direct, <200ms latency
+- **Foreign APIs** → Auto-routed through whatever proxy tool is active
+- **Proxy tool offline** → China APIs still work, foreign APIs fail gracefully
+
+### Quick setup for common agents
+
+```bash
+# Hermes — DeepSeek (direct) + Agnes (proxy)
+alias hermes='wsl-proxy --no-proxy "api.deepseek.com,api.moonshot.cn" -- hermes'
+
+# Claude Code — Anthropic API is fully blocked
+alias claude='wsl-proxy claude'
+
+# Codex / OpenAI Codex CLI
+alias codex='wsl-proxy codex'
+
+# OpenHands / OpenDevin
+alias openhands='wsl-proxy python -m openhands'
+
+# Aider
+alias aider='wsl-proxy aider'
+
+# Generic: proxy everything except China LLM APIs
+wsl-proxy --no-proxy "api.deepseek.com,api.moonshot.cn,dashscope.aliyuncs.com,api.siliconflow.cn" \
+    -- your-command
+```
+
+### Why WSL2 instead of Windows-native?
+
+Many AI agents are built Unix-first. Hermes, Claude Code, Aider, and OpenHands
+all assume a POSIX shell, `/tmp`, and Unix file permissions. Running them
+natively on Windows often means fighting path issues, shell compatibility, and
+tool execution errors. WSL2 gives you a real Linux environment with full access
+to your Windows filesystem (`/mnt/c/`, `/mnt/d/`) — and now, with this script,
+seamless access to your Windows proxy too.
+
 ## Supported Proxy Tools
 
 Scans these Windows proxy tools automatically:
