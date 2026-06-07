@@ -19,7 +19,7 @@ sing-box (1080), or Xray (10809)? This script figures it out automatically.
 curl -fsSL https://raw.githubusercontent.com/<user>/wsl-proxy-launcher/main/setup.sh | bash
 
 # Or clone and install
-git clone https://github.com/<user>/wsl-proxy-launcher.git
+git clone https://github.com/hjt-shuai/wsl-proxy-launcher.git
 cd wsl-proxy-launcher && bash setup.sh
 ```
 
