@@ -2,7 +2,7 @@
 # =============================================================================
 # wsl-proxy-launcher.sh — Auto-detect Windows proxy and launch any command
 # =============================================================================
-# Scans common Windows proxy tools (Clash, v2rayN, ChromeGo, sing-box, etc.)
+# Scans common Windows proxy tools (Clash, v2rayN, sing-box, Hiddify, etc.)
 # for their listen ports, tests which one is active, sets HTTPS_PROXY env
 # vars, then launches your command with proxy inherited.
 #
@@ -29,10 +29,6 @@ DEFAULT_NO_PROXY="localhost,127.0.0.1,::1"
 # Built-in scan directories for common Windows proxy tools (WSL /mnt/ paths)
 # Users can extend via PROXY_SCAN_DIRS env var
 BUILTIN_SCAN_DIRS=(
-    # ChromeGo (popular in China)
-    "/mnt/d/tools/ChromeGo/ChromeGo"
-    "/mnt/c/tools/ChromeGo/ChromeGo"
-    "/mnt/e/tools/ChromeGo/ChromeGo"
     # Clash Verge / Clash for Windows
     "/mnt/c/Users/${USER}/.config/clash-verge"
     "/mnt/c/Users/${USER}/AppData/Roaming/clash-verge"
@@ -47,17 +43,9 @@ BUILTIN_SCAN_DIRS=(
 
 # --- Config file patterns to scan ---
 CONFIG_PATTERNS=(
-    "clash.meta/config.yaml"
-    "clash/config.yaml"
     "config.yaml"
+    "config.yml"
     "config.json"
-    "Xray/config.json"
-    "hysteria/config.json"
-    "hysteria2/config.json"
-    "juicity/config.json"
-    "naiveproxy/config.json"
-    "singbox/config.json"
-    "sing-box/config.json"
 )
 
 # --- Colors ---

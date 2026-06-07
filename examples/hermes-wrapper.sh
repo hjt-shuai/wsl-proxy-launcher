@@ -14,10 +14,10 @@ LAUNCHER="$SCRIPT_DIR/../wsl-proxy-launcher.sh"
 # Hosts accessible from China without proxy
 NO_PROXY="localhost,127.0.0.1,::1,api.deepseek.com,api.moonshot.cn,dashscope.aliyuncs.com"
 
-# ChromeGo location (adjust to your setup)
-CHROMEGO_DIR="/mnt/d/tools/ChromeGo/ChromeGo"
+# Add your proxy tool's config directory here
+PROXY_DIR="/mnt/d/tools/clash"
 
 exec "$LAUNCHER" \
     --no-proxy "$NO_PROXY" \
-    --scan-dir "$CHROMEGO_DIR" \
+    --scan-dir "$PROXY_DIR" \
     -- hermes "$@"

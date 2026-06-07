@@ -2,7 +2,7 @@
 
 **Auto-detect Windows proxy from WSL2 and launch any command with it.**
 
-You run a proxy tool on Windows (Clash, v2rayN, ChromeGo, sing-box...). You want
+You run a proxy tool on Windows (Clash, v2rayN, sing-box, Hiddify...). You want
 commands in WSL2 to automatically use that proxy. This script scans your proxy
 config files, finds the active port, sets `https_proxy`, and launches your
 command — all with zero manual configuration.
@@ -68,7 +68,7 @@ Add to `~/.bashrc` for defaults that apply to all `wsl-proxy` calls:
 
 ```bash
 export PROXY_NO_PROXY="api.deepseek.com,api.moonshot.cn"
-export PROXY_SCAN_DIRS="/mnt/d/tools/ChromeGo/ChromeGo"
+export PROXY_SCAN_DIRS="/mnt/d/tools/clash:/mnt/c/Users/$USER/AppData/Roaming/v2rayN"
 ```
 
 ### Per-tool aliases
@@ -87,7 +87,7 @@ alias codex='wsl-proxy codex'
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ 1. SCAN — Read proxy configs from Windows via /mnt/     │
-│    ChromeGo/  Clash Verge/  v2rayN/  sing-box/  ...     │
+│    Clash Verge/  v2rayN/  sing-box/  Hiddify/  ...      │
 │    Extracts ports from YAML and JSON config files        │
 │    ↓                                                    │
 │ 2. PROBE — Test each candidate port                     │
@@ -159,7 +159,7 @@ networkingMode=mirrored
 ```
 
 **Problem:** Requires Windows 11 22H2+. Requires your proxy to listen on
-`0.0.0.0` (Allow LAN). ChromeGo and some Clash configs default to
+`0.0.0.0` (Allow LAN). Many proxy tools default to
 `allow-lan: false` for security. Also, you can't control **which** hosts go
 through the proxy — it copies Windows' system proxy setting, which is
 all-or-nothing.
@@ -232,13 +232,9 @@ Scans these Windows proxy tools automatically:
 | Tool | Config Location | Default Port(s) |
 |------|----------------|-----------------|
 | Clash Meta / Clash Verge | `~/.config/clash-verge/`, `AppData/` | 7890 |
-| ChromeGo | `D:/tools/ChromeGo/` or `C:/tools/ChromeGo/` | 7890, 1080 |
 | v2rayN | `AppData/Roaming/v2rayN/` | 1080, 10809 |
 | sing-box | `~/.config/sing-box/` | 1080 |
-| hysteria / hysteria2 | Part of ChromeGo or standalone | 1080 |
-| Xray | Part of ChromeGo or standalone | 1080 |
 | Hiddify | `AppData/Roaming/hiddify/` | 1080 |
-| naiveproxy / juicity | Part of ChromeGo | 1080 |
 
 Don't see your tool? Add it with `--scan-dir` or `PROXY_SCAN_DIRS`.
 
@@ -281,7 +277,7 @@ No `sudo`, no `pip install`, no dependencies beyond what ships with WSL.
 # ~/.hermes/bin/hermes-launcher.sh
 exec wsl-proxy-launcher.sh \
     --no-proxy "api.deepseek.com,api.moonshot.cn,dashscope.aliyuncs.com" \
-    --scan-dir "/mnt/d/tools/ChromeGo/ChromeGo" \
+    --scan-dir "/mnt/d/tools/clash" \
     -- hermes "$@"
 ```
 
